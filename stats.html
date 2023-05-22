@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STATS</title>
+
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body{
+            height: 100vh;
+            height: 100dvh;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    
+    
+        thead th{
+            width: 120px;
+            height: 120px;
+            font-size: 30px;
+        }
+        thead th:nth-child(2){
+            background: url(m-01.svg);
+            background-size: contain;
+            background-position: center;
+        }
+        thead th:nth-child(3){
+            background: url(m-02.svg);
+            background-size: contain;
+            background-position: center;
+        }
+        thead th:nth-child(4){
+            background: url(m-03.svg);
+            background-size: contain;
+            background-position: center;
+        }
+        thead th:nth-child(5){
+            background: url(m-04.svg);
+            background-size: contain;
+            background-position: center;
+        }
+    
+        tbody td{
+            font-size: 1.5em;
+            text-align: center;
+        }
+        /* even rows */
+        tbody tr:nth-child(even){
+            background-color: #ffffff1a;
+        }
+    </style>
+</head>
+<body>
+
+
+    <table>
+        <thead>
+            <tr>
+                <th>ime</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    
+    <script>
+        const ids = [];
+        const bins = [];
+    
+        getIds();
+    
+        async function getIds() {
+            console.log('fetching collection bins ids');
+            let url = 'https://api.jsonbin.io/v3/c/646ae351b89b1e2299a23ff9/bins';
+            if (ids.length > 0) {
+                url += "/" + ids[ids.length-1];
+            }
+    
+            const response = await fetch('https://api.jsonbin.io/v3/c/646ae351b89b1e2299a23ff9/bins', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': '$2b$10$we0wxrWtQid0JZ4K9mybYOJOMBl2gaxnpMzm6zZUS1XoRW4PZi/r.'
+                }
+            });
+            const data = await response.json();
+    
+            data.forEach(element => {
+                ids.push(element.record);
+            });
+    
+            if (data[9]) {
+                getIds();
+            } else {
+                console.log('done fetching collection bins ids');
+                console.log(ids);
+                getBins();
+            }
+        }
+    
+        let i = 0;
+        function getBins() {
+            let url = 'https://api.jsonbin.io/v3/b/' + ids[i] +'/latest';
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': '$2b$10$we0wxrWtQid0JZ4K9mybYOJOMBl2gaxnpMzm6zZUS1XoRW4PZi/r.',
+                    'X-Bin-Meta': 'false'
+                }
+            }).then(response => response.json())
+            .then(data => {
+                console.log(data);
+                bins.push(data);
+                render(data);
+                i++;
+    
+                if (i < ids.length) {
+                    getBins();
+                } else {
+                    console.log('done fetching bins');
+                    console.log(bins);
+                    renderAvg();
+                }
+            });
+    
+        }
+    
+        function render(bin) {
+            let tbody = document.querySelector('tbody');
+            tbody.innerHTML += `
+                <tr>
+                    <td>${bin.name}</td>
+                    <td>${bin.data[0]}</td>
+                    <td>${bin.data[1]}</td>
+                    <td>${bin.data[2]}</td>
+                    <td>${bin.data[3]}</td>
+                </tr>
+            `;
+        }
+    
+        function renderAvg() {
+            let ths = document.querySelectorAll('thead th');
+            // calculate average
+            const avgs = [0, 0, 0, 0];
+            bins.forEach(bin => {
+                avgs[0] += bin.data[0];
+                avgs[1] += bin.data[1];
+                avgs[2] += bin.data[2];
+                avgs[3] += bin.data[3];
+            });
+            avgs.forEach((avg, i) => {
+                avgs[i] = avg / bins.length;
+            });
+    
+            for (let i = 1; i < ths.length; i++) {
+                ths[i].innerHTML = avgs[i-1];
+            }
+    
+        }
+    
+    
+    </script>
+</body>
+</html>
